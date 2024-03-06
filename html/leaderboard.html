@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal';
+            background-image: linear-gradient(to right, #4fe4fc, #4a6bc9);
+            color: black; 
+            direction: rtl; 
+        }
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px auto;
+            direction: rtl; 
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+            background-color: #f2f2f2;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .title {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+        }
+
+        .left-elements img {
+            margin-right: 10px; /* Adjust the margin as needed */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" style="right: 0px;">
+        <div class="" style="align-items: start;">
+            <img height="200px" width="200px" src="https://imamu.edu.sa/_layouts/15/2016/Portal/img/logo.png">
+            <img height="200px" width="200px" src="https://cdn.discordapp.com/attachments/1206727500533604453/1214986744298999819/wHskRObqmQ85QAAAABJRU5ErkJggg.png?ex=65fb1b95&is=65e8a695&hm=e50621f870101b7240fc3e7897338cd007bc7e9b2c5442797100d5fcf7f2970c&" alt="Right Image">
+        </div>
+        <div class="">
+            <img height="200px" width="200px" src="https://cdn.discordapp.com/attachments/1206727500533604453/1214983884874317915/1913279f7a9b6fc7.png?ex=65fb18eb&is=65e8a3eb&hm=370824870937ec3672748e82a04930904e5702d283999394f7e1886072c7adcc&" alt="Second Image">
+        </div>
+    </div>
+
+    <div class="title">
+        <h1>قائمة الأساطير</h1>
+        <h2>يلعب حاليًّا:</h2>
+        <h2 id="current_player_name" style="color: darkred;">لا يوجد لاعب حاليًّا</h2>
+        <h2 id="current_player_time" style="color: darkred;">00:00</h2>
+    </div>
+
+<table id="myTable">
+    <tr>
+        <th>المركز</th>
+        <th>الأسم</th>
+        <th style="width: 120px;">زمن الأنتهاء</th>
+    </tr>
+</table>
+    <script>
+        const socket = io({
+            query: {
+                room: "leaderboard"
+            }
+        })
+
+        $.ajax({
+            url: "/leaderboard_thing",
+            method: "GET",
+            success: data => {
+                for(let i = 0; i < data.length; i++) {
+                    const time = data[i].time / 1000;
+                    const minutes = Math.floor(time / 60).toString().padStart(2, "0");
+                    const seconds = (time % 60).toFixed(0).toString().padStart(2, "0");
+
+                    document.getElementById("myTable").innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${data[i].name}</td>
+                        <td>${minutes}:${seconds}</td>
+                    </tr>
+                    `
+                }
+            }
+        })
+
+        let timerInterval;
+        function startTimer() {
+            let time = 0;
+            timerInterval = setInterval(() => {
+                time++;
+                let minutes = Math.floor(time / 60).toString().padStart(2, "0");
+                let seconds = (time % 60).toString().padStart(2, "0");
+                document.getElementById("current_player_time").innerText = `${minutes}:${seconds}`;
+            }, 1000)
+        }
+
+        socket.on("add_player", (name) => {
+            const elementToModify = document.getElementById("current_player_name");
+            elementToModify.innerText = name;
+            elementToModify.style.color = "darkgreen";
+            document.getElementById("current_player_time").style.color = "darkgreen";
+            startTimer();
+        })
+        
+        socket.on("refresh_page", () => {
+            location.reload();
+        })
+    </script>
+</body>
+</html>
